@@ -104,13 +104,17 @@ def image_transform(I, Th,  output_shape=None):
 
     # convert to a 2-by-p matrix (p is the number of pixels)
     X = np.concatenate((xx.reshape((1, xx.size)), yy.reshape((1, yy.size))))
+
     # convert to homogeneous coordinates
     Xh = util.c2h(X)
 
-    #------------------------------------------------------------------#
-    # TODO: Perform inverse coordinates mapping.
-    #------------------------------------------------------------------#
+    #Calculate inverse transformation matrix
+    Th_inv = np.linalg.inv(Th)
 
+    #Map points on grid to input image using the inverse transformation matrix
+    Xt = Th_inv.dot(Xh)
+
+    #Define each intensity value via interpolation
     It = ndimage.map_coordinates(I, [Xt[1,:], Xt[0,:]], order=1, mode='constant').reshape(I.shape)
 
     return It, Xt
@@ -125,9 +129,11 @@ def ls_solve(A, b):
     # w - least-squares solution to the system of equations
     # E - squared error for the optimal solution
 
-    #------------------------------------------------------------------#
-    # TODO: Implement the least-squares solution for w.
-    #------------------------------------------------------------------#
+    #Firstly, define A_transposed
+    A_T = np.transpose(A)
+
+    #Now, solve for w using the formula provided in the notebook
+    w = np.linalg.inv(A_T.dot(A)).dot(A_T.dot(b))
 
     # compute the error
     E = np.transpose(A.dot(w) - b).dot(A.dot(w) - b)
