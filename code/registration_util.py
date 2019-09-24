@@ -39,15 +39,13 @@ def t2h(T, t):
     # Convert a 2D transformation matrix to homogeneous form.
     # Input:
     # T - 2D transformation matrix
-    # Xt - 2D translation vector
+    # t - 2D translation vector
     # Output:
     # Th - homogeneous transformation matrix
 
-    #------------------------------------------------------------------#
-    # TODO: Implement conversion of a transformation matrix and a translation vector to homogeneous transformation matrix.
-    # remove the 'pass' once implemented
-    pass
-    #------------------------------------------------------------------#
+    Th = np.array([[T[0,0],T[0,1],t[0]],[T[1,0],T[1,1],t[1]],[0,0,1]])
+
+    return Th
 
 
 def plot_object(ax, X):

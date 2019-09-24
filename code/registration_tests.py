@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 import registration as reg
 import registration_util as util
 from IPython.display import display, clear_output
+from math import *
 
 
 # SECTION 1. Geometrical transformations
@@ -45,10 +46,29 @@ def combining_transforms():
 
     X = util.test_object(1)
 
-    #------------------------------------------------------------------#
-    # TODO: Experiment with combining transformation matrices.
-    #------------------------------------------------------------------#
+    X_1 = X
+    X_2 = reg.rotate(3*np.pi/4).dot(X)
+    X_3 = reg.reflect(-1, 1).dot(reg.rotate(3 * np.pi / 4).dot(X))
+    X_4 = reg.shear(0.1,0.2).dot(reg.reflect(-1, 1).dot(reg.rotate(3 * np.pi / 4).dot(X)))
 
+    fig = plt.figure(figsize=(12, 5))
+    ax1 = fig.add_subplot(141, xlim=(-4, 4), ylim=(-4, 4))
+    ax2 = fig.add_subplot(142, xlim=(-4, 4), ylim=(-4, 4))
+    ax3 = fig.add_subplot(143, xlim=(-4, 4), ylim=(-4, 4))
+    ax4 = fig.add_subplot(144, xlim=(-4, 4), ylim=(-4, 4))
+
+    util.plot_object(ax1, X_1)
+    util.plot_object(ax2, X_2)
+    util.plot_object(ax3, X_3)
+    util.plot_object(ax4, X_4)
+
+    ax1.set_title('Original')
+    ax2.set_title('Then rotate')
+    ax3.set_title('Now reflect over x')
+    ax4.set_title('Lastly, shear')
+
+    for ax_obj in [ax1,ax2,ax3,ax4]:
+        ax_obj.grid()
 
 def t2h_test():
 
@@ -77,9 +97,16 @@ def arbitrary_rotation():
     X = util.test_object(1)
     Xh = util.c2h(X)
 
-    #------------------------------------------------------------------#
-    # TODO: TODO: Perform rotation of the test shape around the first vertex
-    #------------------------------------------------------------------#
+    #Define rotation angle 45degrees
+    phi = np.pi/4
+
+    #Define seperate homogenous transformation matrices
+    T_1 = np.array([[1,0,-X[0,0]],[0,1,-X[1,0]],[0,0,1]])
+    T_rot = np.array([[cos(phi),-sin(phi),0],[sin(phi),cos(phi),0],[0,0,1]])
+    T_2 = np.array([[1,0,X[0,0]],[0,1,X[1,0]],[0,0,1]])
+
+    #Combine them
+    T = T_2.dot(T_rot.dot(T_1))
 
     X_rot = T.dot(Xh)
 
