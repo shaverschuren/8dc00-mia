@@ -151,15 +151,17 @@ def ls_affine(X, Xm):
 
     A = np.transpose(Xm)
 
-    #------------------------------------------------------------------#
-    # TODO: Implement least-squares fitting of an affine transformation.
-    # Use the ls_solve() function that you have previously implemented.
-    #------------------------------------------------------------------#
+    #Solve systems for both x and y
+    w_x, E_x = ls_solve(A,b_x)
+    w_y, E_y = ls_solve(A,b_y)
+
+    #Fill up transformation matrix with found w-values
+    T = np.array([[w_x[0],w_x[1],w_x[2]],[w_y[0],w_y[1],w_y[2]],[0,0,1]])
 
     return T
 
 
-# SECTION 3. Image simmilarity metrics
+# SECTION 3. Image similarity metrics
 
 
 def correlation(I, J):
