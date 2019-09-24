@@ -151,17 +151,20 @@ def ls_affine(X, Xm):
 
     A = np.transpose(Xm)
 
-    #Solve systems for both x and y
+    #Fill up solution vectors with original picture values
+    b_x = X[0,:]
+    b_y = X[1,:]
+
+    #------------------------------------------------------------------#
     w_x, E_x = ls_solve(A,b_x)
     w_y, E_y = ls_solve(A,b_y)
+    #------------------------------------------------------------------#
 
-    #Fill up transformation matrix with found w-values
     T = np.array([[w_x[0],w_x[1],w_x[2]],[w_y[0],w_y[1],w_y[2]],[0,0,1]])
-
     return T
 
 
-# SECTION 3. Image similarity metrics
+# SECTION 3. Image simmilarity metrics
 
 
 def correlation(I, J):
