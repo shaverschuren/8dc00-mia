@@ -5,6 +5,7 @@ Registration module main code.
 import numpy as np
 from scipy import ndimage
 import registration_util as util
+from math import *
 
 
 # SECTION 1. Geometrical transformations
@@ -39,9 +40,7 @@ def rotate(phi):
     # Output:
     # T - transformation matrix
 
-    #------------------------------------------------------------------#
-    # TODO: Implement transformation matrix for rotation.
-    #------------------------------------------------------------------#
+    T = np.array([[cos(phi),-sin(phi)],[sin(phi),cos(phi)]])
 
     return T
 
@@ -54,9 +53,7 @@ def shear(cx, cy):
     # Output:
     # T - transformation matrix
 
-    #------------------------------------------------------------------#
-    # TODO: Implement transformation matrix for shear.
-    #------------------------------------------------------------------#
+    T = np.array([[1,cx],[cy,1]])
 
     return T
 
@@ -74,9 +71,7 @@ def reflect(rx, ry):
         T = 'Invalid input parameter'
         return T
 
-    #------------------------------------------------------------------#
-    # TODO: Implement transformation matrix for reflection
-    #------------------------------------------------------------------#
+    T = np.array([[rx,0],[0,ry]])
 
     return T
 
