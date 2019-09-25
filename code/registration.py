@@ -164,7 +164,7 @@ def ls_affine(X, Xm):
     return T
 
 
-# SECTION 3. Image simmilarity metrics
+# SECTION 3. Image similarity metrics
 
 
 def correlation(I, J):
@@ -185,10 +185,7 @@ def correlation(I, J):
     u = u - u.mean(keepdims=True)
     v = v - v.mean(keepdims=True)
 
-    #------------------------------------------------------------------#
-    # TODO: Implement the computation of the normalized cross-correlation.
-    # This can be done with a single line of code, but you can use for-loops instead.
-    #------------------------------------------------------------------#
+    CC = (np.transpose(u).dot(v))/(sqrt(np.transpose(u).dot(u))*sqrt(np.transpose(v).dot(v)))
 
     return CC
 
@@ -233,12 +230,7 @@ def joint_histogram(I, J, num_bins=16, minmax_range=None):
     for k in range(n):
         p[I[k], J[k]] = p[I[k], J[k]] + 1
 
-    #------------------------------------------------------------------#
-    # TODO: At this point, p contains the counts of cooccuring
-    # intensities in the two images. You need to implement one final
-    # step to make p take the form of a probability mass function
-    # (p.m.f.).
-    #------------------------------------------------------------------#
+    p = p/np.sum(p)
 
     return p
 
@@ -249,8 +241,8 @@ def mutual_information(p):
     # p - joint histogram
     # Output:
     # MI - mutual information in nat units
-    # a very small positive number
 
+    # a very small positive number
     EPSILON = 10e-10
 
     # add a small positive number to the joint histogram to avoid
@@ -263,16 +255,14 @@ def mutual_information(p):
     p_J = np.sum(p, axis=0)
     p_J = p_J.reshape(1, -1)
 
-    #------------------------------------------------------------------#
-    # TODO: Implement the computation of the mutual information from p,
-    # p_I and p_J. This can be done with a single line of code, but you
-    # can use a for-loop instead.
-    # HINT: p_I is a column-vector and p_J is a row-vector so their
-    # product is a matrix. You can also use the sum() function here.
-    #------------------------------------------------------------------#
+    MI = 0
 
+    for i in range(0,np.size(p_I)):
+        for j in range(0,np.size(p_J)):
+            MI = MI + p[i,j]*log(p[i,j]/(p_I[i]*p_J[:,j]))
+
+    print("MI (direct formula method):",MI)
     return MI
-
 
 def mutual_information_e(p):
     # Compute the mutual information from a joint histogram.
@@ -281,8 +271,8 @@ def mutual_information_e(p):
     # p - joint histogram
     # Output:
     # MI - mutual information in nat units
-    # a very small positive number
 
+    # a very small positive number
     EPSILON = 10e-10
 
     # add a small positive number to the joint histogram to avoid
@@ -295,11 +285,26 @@ def mutual_information_e(p):
     p_J = np.sum(p, axis=0)
     p_J = p_J.reshape(1, -1)
 
-    #------------------------------------------------------------------#
-    # TODO: Implement the computation of the mutual information via
-    # computation of entropy.
-    #------------------------------------------------------------------#
+    #Compute entropies
 
+    H_I = 0
+    for i in range(0,np.size(p_I)):
+        H_I = H_I - p_I[i]*log(p_I[i])
+
+    H_J = 0
+    for j in range(0, np.size(p_J)):
+        H_J = H_J - p_J[:,j] * log(p_J[:,j])
+
+    #Compute joint entropy
+    H_IJ = 0
+    for i in range(0,np.size(p_I)):
+        for j in range(0,np.size(p_J)):
+            H_IJ = H_IJ + p[i,j]*log(p[i,j])
+
+    #Solve for MI
+    MI = H_I + H_J - H_IJ
+
+    print("MI (entropy calculation method):",MI)
     return MI
 
 

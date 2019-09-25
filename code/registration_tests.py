@@ -210,19 +210,29 @@ def ls_affine_test():
 
 def correlation_test():
 
-    I = plt.imread('../data/cameraman.tif')
+    I = plt.imread('../data/t1_demo.tif')
     Th = util.t2h(reg.identity(), np.array([10,20]))
     J, _ = reg.image_transform(I, Th)
+    K, _ = reg.image_transform(J, Th)
 
     C1 = reg.correlation(I, I)
+    C2 = reg.correlation(J,J)
     # the self correlation should be very close to 1
     assert abs(C1 - 1) < 10e-10, "Correlation function is incorrectly implemented (self correlation test)"
+    assert abs(C2 - 1) < 10e-10, "Correlation function is incorrectly implemented (self correlation test)"
 
-    #------------------------------------------------------------------#
-    # TODO: Implement a few more tests of the correlation definition
-    #------------------------------------------------------------------#
+    C3 = reg.correlation(I,J)
+    C4 = reg.correlation(I,K)
+    print("Correlation between images with slight translocation:",C3)
+    print("Correlation between images with big translocation:", C4, "\n")
 
     print('Test successful!')
+
+    ########
+    print("\n\nAnd now for a test on the joint probability histogram: \n")
+    p = reg.joint_histogram(I,J)
+    assert abs(1-float(np.sum(p))) < 0.01, "Mass probability function error..."
+    print("Test successful!")
 
 
 def mutual_information_test():
@@ -233,9 +243,15 @@ def mutual_information_test():
     p1 = reg.joint_histogram(I, I)
     MI1 = reg.mutual_information(p1)
 
-    #------------------------------------------------------------------#
-    # TODO: Implement a few tests of the mutual_information definition
-    #------------------------------------------------------------------#
+    J = np.random.randint(255, size=(512, 512))
+    K = np.random.randint(255, size=(512, 512))
+    p2 = reg.joint_histogram(J, K)
+    MI2 = reg.mutual_information(p2)
+
+
+    print(MI1," ",MI2)
+    assert MI1 > 0, "Mutual Information calculation error (MI<0).."
+    assert MI2 > 0, "Mutual Information calculation error (MI<0).."
 
     print('Test successful!')
 
