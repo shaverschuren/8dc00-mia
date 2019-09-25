@@ -319,7 +319,7 @@ def ngradient(fun, x, h=1e-3):
     for par in range(0, np.size(x)):
         h_column = np.zeros(np.size(x))
         h_column[par] = h/2
-        g[par] = (fun(*(np.add(x, h_column)))-fun(*(np.subtract(x, h_column))))/h
+        g[par] = (fun(np.add(x, h_column))-fun(np.subtract(x, h_column)))/h         ####### CHANGE: Removed *(...)
 
     return g
 
