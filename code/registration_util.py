@@ -67,8 +67,15 @@ def my_cpselect(I_path, Im_path):
     # X - control points in the fixed image
     # Xm - control points in the moving image
 
-    #------------------------------------------------------------------#
-    # TODO: Call cpselect and modify the returned point coordinates.
-    #------------------------------------------------------------------#
+    p = cpselect(I_path, Im_path)
+
+    X = np.zeros([2,len(p)])
+    Xm = np.zeros([2,len(p)])
+
+    for i in range(0,len(p)):
+        X[0,i] = p[i]['img1_x']
+        X[1,i] = p[i]['img1_y']
+        Xm[0, i] = p[i]['img2_x']
+        Xm[1, i] = p[i]['img2_y']
 
     return X, Xm

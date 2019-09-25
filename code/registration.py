@@ -6,6 +6,7 @@ import numpy as np
 from scipy import ndimage
 import registration_util as util
 from math import *
+import matplotlib.pyplot as plt
 
 
 # SECTION 1. Geometrical transformations
@@ -151,14 +152,12 @@ def ls_affine(X, Xm):
 
     A = np.transpose(Xm)
 
-    #Fill up solution vectors with original picture values
+    #Fill up solution vectors with original point positions
     b_x = X[0,:]
     b_y = X[1,:]
 
-    #------------------------------------------------------------------#
     w_x, E_x = ls_solve(A,b_x)
     w_y, E_y = ls_solve(A,b_y)
-    #------------------------------------------------------------------#
 
     T = np.array([[w_x[0],w_x[1],w_x[2]],[w_y[0],w_y[1],w_y[2]],[0,0,1]])
     return T
@@ -411,3 +410,38 @@ def affine_mi(I, Im, x):
     #------------------------------------------------------------------#
 
     return MI, Im_t, Th
+
+def pbr(I_path,Im_path):
+
+    # Load in images
+    I = plt.imread(I_path)
+    Im = plt.imread(Im_path)
+
+    # Set control points
+    X, Xm = util.my_cpselect(I_path, Im_path)
+
+    Xh = util.c2h(X)
+    Xmh = util.c2h(Xm)
+
+    # Find optimal affine transformation
+    T = ls_affine(Xh, Xmh)
+
+    # Transform Im
+    Im_t = image_transform(Im, T)
+
+    # Display images
+    fig = plt.figure(figsize=(12, 5))
+
+    ax1 = fig.add_subplot(131)
+    im11 = ax1.imshow(I)
+
+    ax2 = fig.add_subplot(132)
+    im21 = ax2.imshow(Im)
+
+    ax3 = fig.add_subplot(133)
+    im31 = ax3.imshow(Im)
+    #im32 = ax3.imshow(Im_t, alpha=0.7)
+
+    ax1.set_title('Original image (I)')
+    ax2.set_title('Warped image (Im)')
+    ax3.set_title('Overlay with I and Im')

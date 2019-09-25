@@ -158,7 +158,6 @@ def image_transform_test():
     ax2.set_title('Shearing')
     ax3.set_title('Scaling')
 
-
 def ls_solve_test():
 
     #Define known variable matrix A
