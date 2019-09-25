@@ -427,7 +427,7 @@ def pbr(I_path,Im_path):
     T = ls_affine(Xh, Xmh)
 
     # Transform Im
-    Im_t = image_transform(Im, T)
+    Im_t, X_t = image_transform(Im, T)
 
     # Display images
     fig = plt.figure(figsize=(12, 5))
@@ -439,9 +439,9 @@ def pbr(I_path,Im_path):
     im21 = ax2.imshow(Im)
 
     ax3 = fig.add_subplot(133)
-    im31 = ax3.imshow(Im)
-    #im32 = ax3.imshow(Im_t, alpha=0.7)
+    im31 = ax3.imshow(I)
+    im32 = ax3.imshow(Im_t, alpha=0.7)
 
     ax1.set_title('Original image (I)')
     ax2.set_title('Warped image (Im)')
-    ax3.set_title('Overlay with I and Im')
+    ax3.set_title('Overlay with I and transformed Im')
