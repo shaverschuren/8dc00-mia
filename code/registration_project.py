@@ -7,8 +7,13 @@ import matplotlib.pyplot as plt
 import registration as reg
 from IPython.display import display, clear_output
 
-def fun(I, Im, x):
-    return reg.rigid_corr(I, Im, x)
+# def fun(I, Im, x):
+#     print(x)
+#     f = reg.rigid_corr(I, Im, x)
+#     C = f[0]
+#     Im_t = f[1]
+#     Th = f[2]
+#     return C
 
 
 def intensity_based_registration_demo():
@@ -33,7 +38,7 @@ def intensity_based_registration_demo():
     # are fixed and the only remaining parameter is the vector x with the
     # parameters of the transformation
 
-    # fun = lambda x: reg.rigid_corr(I, Im, x)
+    fun = lambda x: reg.rigid_corr(I, Im, x)
 
     # the learning rate
     mu = 0.001

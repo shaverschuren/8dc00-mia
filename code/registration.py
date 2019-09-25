@@ -40,7 +40,6 @@ def rotate(phi):
     # phi - rotation angle
     # Output:
     # T - transformation matrix
-
     T = np.array([[cos(phi), -sin(phi)], [sin(phi), cos(phi)]])
 
     return T
@@ -315,28 +314,11 @@ def ngradient(fun, x, h=1e-3):
     # Output:
     # g - vector of partial derivatives (gradient) of fun
 
-    # ------------------------------------------------------------------#
-    # TODO: Implement the  computation of the partial derivatives of
-    # the function at x with numerical differentiation.
-    # g[k] should store the partial derivative w.r.t. the k-th parameter
-    # ------------------------------------------------------------------#
-
-    # print(np.size(x))
-    # if np.size(x) == 1:
-    #     g = (fun(x+h/2)-fun(x-h/2))/h
-    # elif np.size(x) == 2:
-    #     g = np.zeros(2)
-    #     g[0] = (fun(x[0]+h/2,x[1])-fun(x[0]-h/2,x[1]))/h
-    #     g[1] = (fun(x[0],x[1]+h/2)-fun(x[0],x[1]-h/2))/h
-    # else:
-    #     print("ERROR: Partial derivatives with more than two parameters are not (yet) supported")
-
     g = np.zeros(np.size(x))
 
     for par in range(0, np.size(x)):
         h_column = np.zeros(np.size(x))
         h_column[par] = h/2
-
         g[par] = (fun(*(np.add(x, h_column)))-fun(*(np.subtract(x, h_column))))/h
 
     return g
@@ -382,26 +364,36 @@ def rigid_corr(I, Im, x):
 
 
 def affine_corr(I, Im, x):
-    # Computes normalized cross-corrleation between a fixed and
+    # Computes normalized cross-correlation between a fixed and
     # a moving image transformed with an affine transformation.
     # Input:
     # I - fixed image
     # Im - moving image
-    # x - parameters of the rigid transform: the first element
-    #     is the roation angle, the second and third are the
+    # x - parameters of the affine transform: the first element
+    #     is the rotation angle, the second and third are the
     #     scaling parameters, the fourth and fifth are the
     #     shearing parameters and the remaining two elements
     #     are the translation
     # Output:
-    # C - normalized cross-corrleation between I and T(Im)
+    # C - normalized cross-correlation between I and T(Im)
     # Im_t - transformed moving image T(Im)
 
     NUM_BINS = 64
     SCALING = 100
 
-    # ------------------------------------------------------------------#
-    # TODO: Implement the missing functionality
-    # ------------------------------------------------------------------#
+    # Assemble transformation matrix (according to parameter sequence)
+    T_rot = rotate(x[0])
+    T_scale = scale(x[1], x[2])
+    T_shear = shear(x[3], x[4])
+    T = T_shear.dot(T_scale.dot(T_rot))
+
+    Th = util.c2h(T, x[5:] * SCALING)
+
+    #Transform moving image
+    Im_t, Xt = image_transform(Im, Th)
+
+    #Calculate correlation between images
+    C = correlation(I,Im_t)
 
     return C, Im_t, Th
 
@@ -424,9 +416,27 @@ def affine_mi(I, Im, x):
     NUM_BINS = 64
     SCALING = 100
 
-    # ------------------------------------------------------------------#
-    # TODO: Implement the missing functionality
-    # ------------------------------------------------------------------#
+    # Assemble transformation matrix (according to parameter sequence)
+    T_rot = rotate(x[0])
+    T_scale = scale(x[1], x[2])
+    T_shear = shear(x[3], x[4])
+    T = T_shear.dot(T_scale.dot(T_rot))
+
+    Th = util.c2h(T, x[5:] * SCALING)
+
+    # Transform moving image
+    Im_t, Xt = image_transform(Im, Th)
+
+    # Compute joint histogram
+    p = joint_histogram(I,Im_t,NUM_BINS)
+
+    # Now use the joint histogram to compute mutual information
+    MI_1 = mutual_information_e(p)
+    MI_2 = mutual_information(p)
+
+    assert abs(MI_1-MI_2) < 0.001, "Something went wrong with the computation of mutual information..."
+
+    MI = MI_1
 
     return MI, Im_t, Th
 
