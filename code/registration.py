@@ -256,12 +256,10 @@ def mutual_information(p):
     p_J = p_J.reshape(1, -1)
 
     MI = 0
-
     for i in range(0,np.size(p_I)):
         for j in range(0,np.size(p_J)):
             MI = MI + p[i,j]*log(p[i,j]/(p_I[i]*p_J[:,j]))
 
-    print("MI (direct formula method):",MI)
     return MI
 
 def mutual_information_e(p):
@@ -286,11 +284,9 @@ def mutual_information_e(p):
     p_J = p_J.reshape(1, -1)
 
     #Compute entropies
-
     H_I = 0
     for i in range(0,np.size(p_I)):
         H_I = H_I - p_I[i]*log(p_I[i])
-
     H_J = 0
     for j in range(0, np.size(p_J)):
         H_J = H_J - p_J[:,j] * log(p_J[:,j])
@@ -299,12 +295,11 @@ def mutual_information_e(p):
     H_IJ = 0
     for i in range(0,np.size(p_I)):
         for j in range(0,np.size(p_J)):
-            H_IJ = H_IJ + p[i,j]*log(p[i,j])
+            H_IJ = H_IJ - p[i,j]*log(p[i,j])
 
     #Solve for MI
     MI = H_I + H_J - H_IJ
 
-    print("MI (entropy calculation method):",MI)
     return MI
 
 
