@@ -273,6 +273,9 @@ def mutual_information_e_test():
 
 # SECTION 4. Towards intensity-based image registration
 
+def test_fun(x,y):
+    return (1-(x**2+y**3))*exp(-(x**2+y**2)/2)
+
 def ngradient_test():
 
     # NOTE: test function not strictly scalar-valued
@@ -280,9 +283,7 @@ def ngradient_test():
     g1 = reg.ngradient(exponential, np.ones((1,)))
     assert abs(g1 - exponential(1)) < 1e-5, "Numerical gradient is incorrectly implemented (exponential test)"
 
-    #------------------------------------------------------------------#
-    # TODO: Implement a few more test cases of ngradient
-    #------------------------------------------------------------------#
+    g2 = reg.ngradient(test_fun,[1,2])
 
     print('Test successful!')
 
@@ -351,7 +352,7 @@ def registration_metrics_demo(use_t2=False):
         MI[k] = reg.mutual_information(p)
 
         clear_output(wait = True)
-        
+
         # visualize the results
         line1.set_ydata(CC)
         line2.set_ydata(MI)
