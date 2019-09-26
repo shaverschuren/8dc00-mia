@@ -142,10 +142,16 @@ def intensity_based_registration(I_path, Im_path, r_a_switch=0, corr_mi_switch=0
     fun = lambda x: (sim_fun(I, Im, x))[0]
     fun_full = lambda x: sim_fun(I, Im, x)
 
-    # the initial learning rate
-    mu = 0.005
-    # number of iterations
-    num_iter = 50
+    if corr_mi_switch == 0:
+        # the initial learning rate
+        mu = 0.005
+        # number of iterations
+        num_iter = 50
+    else:
+        # the initial learning rate
+        mu = 0.003
+        # number of iterations
+        num_iter = 30
 
     #Which results in the following formula for mu:
     fun_mu = lambda i: mu*np.exp(-5*i/num_iter)         # Which results in an initial mu at iteration 1 and a mu/200 at final iteration
@@ -169,7 +175,7 @@ def intensity_based_registration(I_path, Im_path, r_a_switch=0, corr_mi_switch=0
         transform=ax1.transAxes)
 
     # 'learning' curve
-    ax2 = fig.add_subplot(122, xlim=(0, num_iter), ylim=(0, 1))
+    ax2 = fig.add_subplot(122, xlim=(0, num_iter), ylim=(0, 1.1))
 
     learning_curve, = ax2.plot(iterations, similarity, lw=2)
     ax2.set_xlabel('Iteration')
