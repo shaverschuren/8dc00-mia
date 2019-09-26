@@ -387,7 +387,7 @@ def affine_corr(I, Im, x):
     T_shear = shear(x[3], x[4])
     T = T_shear.dot(T_scale.dot(T_rot))
 
-    Th = util.c2h(T, x[5:] * SCALING)
+    Th = util.t2h(T, x[5:] * SCALING)
 
     #Transform moving image
     Im_t, Xt = image_transform(Im, Th)
