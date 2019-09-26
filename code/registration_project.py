@@ -99,10 +99,14 @@ def intensity_based_registration_demo():
         display(fig)
 
 
-def intensity_based_registration(I_path, Im_path, r_a_switch=0):
+def intensity_based_registration(I_path, Im_path, r_a_switch=0, corr_mi_switch=0):
 
     # r_a_switch: 0 --> rigid (default)
     #             1 --> affine
+    assert r_a_switch == 0 or r_a_switch == 1, "Error: input parameter r_a_switch must be either 0 or 1.. "
+
+    # corr_mi_switch: 0 --> correlation (default)
+    #                 1 --> mutual information
     assert r_a_switch == 0 or r_a_switch == 1, "Error: input parameter r_a_switch must be either 0 or 1.. "
 
     # read the fixed and moving images
@@ -123,14 +127,29 @@ def intensity_based_registration(I_path, Im_path, r_a_switch=0):
     # in which the first two input parameters (fixed and moving image)
     # are fixed and the only remaining parameter is the vector x with the
     # parameters of the transformation
+
     if r_a_switch == 0:
-        fun = lambda x: (reg.rigid_corr(I, Im, x))[0]
-        fun_full = lambda x: reg.rigid_corr(I, Im, x)
+        assert corr_mi_switch == 0, "Error, only correlation similarity possible with rigid registration"
+        sim_fun = reg.rigid_corr
     elif r_a_switch == 1:
-        fun = lambda x: (reg.affine_corr(I, Im, x))[0]
-        fun_full = lambda x: reg.affine_corr(I, Im, x)
+        if corr_mi_switch == 0:
+            sim_fun = reg.affine_corr
+        else:
+            sim_fun = reg.affine_mi
     else:
         print("ERROR.. r_a_switch must be either 0 or 1")
+
+    fun = lambda x: (sim_fun(I, Im, x))[0]
+    fun_full = lambda x: sim_fun(I, Im, x)
+
+    # if r_a_switch == 0:
+    #     fun = lambda x: (reg.rigid_corr(I, Im, x))[0]
+    #     fun_full = lambda x: reg.rigid_corr(I, Im, x)
+    # elif r_a_switch == 1:
+    #     fun = lambda x: (reg.affine_corr(I, Im, x))[0]
+    #     fun_full = lambda x: reg.affine_corr(I, Im, x)
+    # else:
+    #     print("ERROR.. r_a_switch must be either 0 or 1")
 
     # the learning rate
     mu = 0.001
