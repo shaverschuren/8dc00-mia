@@ -7,13 +7,114 @@ import matplotlib.pyplot as plt
 import registration as reg
 from IPython.display import display, clear_output
 
-# def fun(I, Im, x):
-#     print(x)
-#     f = reg.rigid_corr(I, Im, x)
-#     C = f[0]
-#     Im_t = f[1]
-#     Th = f[2]
-#     return C
+
+def intensity_based_registration(I_path, Im_path, r_a_switch=0, corr_mi_switch=0):
+
+    # r_a_switch: 0 --> rigid (default)
+    #             1 --> affine
+    assert r_a_switch == 0 or r_a_switch == 1, "Error: input parameter r_a_switch must be either 0 or 1.. "
+
+    # corr_mi_switch: 0 --> correlation (default)
+    #                 1 --> mutual information
+    assert r_a_switch == 0 or r_a_switch == 1, "Error: input parameter r_a_switch must be either 0 or 1.. "
+
+    # read the fixed and moving images
+    # change these in order to read different images
+    I = plt.imread(I_path)
+    Im = plt.imread(Im_path)
+
+    # initial values for the parameters
+    if r_a_switch == 0:
+        x = np.array([0., 0., 0.]) # rotation,transx,transy
+    elif r_a_switch == 1:
+        x = np.array([0., 1., 1.,0.,0.,0.,0.]) # rotation,scalex,scaley,shearx,sheary,transx,transy
+    else:
+        print("ERROR.. r_a_switch must be either 0 or 1")
+
+    # the similarity function
+    # this line of code in essence creates a version of rigid_corr()
+    # in which the first two input parameters (fixed and moving image)
+    # are fixed and the only remaining parameter is the vector x with the
+    # parameters of the transformation
+
+    if r_a_switch == 0:
+        assert corr_mi_switch == 0, "Error, only correlation similarity possible with rigid registration"
+        sim_fun = reg.rigid_corr
+    elif r_a_switch == 1:
+        if corr_mi_switch == 0:
+            sim_fun = reg.affine_corr
+        else:
+            sim_fun = reg.affine_mi
+    else:
+        print("ERROR.. r_a_switch must be either 0 or 1")
+
+    fun = lambda x: (sim_fun(I, Im, x))[0]
+    fun_full = lambda x: sim_fun(I, Im, x)
+
+    if corr_mi_switch == 0:
+        # the initial learning rate
+        mu = 0.005
+        # number of iterations
+        num_iter = 50
+    else:
+        # the initial learning rate
+        mu = 0.003
+        # number of iterations
+        num_iter = 30
+
+    # Which results in the following formula for mu:
+    fun_mu = lambda i: mu*np.exp(-5*i/num_iter)         # Which results in an initial mu at iteration 1 and a mu/200 at final iteration
+
+    iterations = np.arange(1, num_iter+1)
+    similarity = np.full((num_iter, 1), np.nan)
+
+    fig = plt.figure(figsize=(14,6))
+
+    # fixed and moving image, and parameters
+    ax1 = fig.add_subplot(121)
+
+    # fixed image
+    im1 = ax1.imshow(I)
+    # moving image
+    im2 = ax1.imshow(I, alpha=0.7)
+    # parameters
+    txt = ax1.text(0.3, 0.95,
+        np.array2string(x, precision=5, floatmode='fixed'),
+        bbox={'facecolor': 'white', 'alpha': 1, 'pad': 10},
+        transform=ax1.transAxes)
+
+    # 'learning' curve
+    ax2 = fig.add_subplot(122, xlim=(0, num_iter), ylim=(0, 1.1))
+
+    learning_curve, = ax2.plot(iterations, similarity, lw=2)
+    ax2.set_xlabel('Iteration')
+    ax2.set_ylabel('Similarity')
+    ax2.grid()
+
+    # perform 'num_iter' gradient ascent updates
+    i = 0
+    for k in np.arange(num_iter):
+
+        # gradient ascent
+        g = reg.ngradient(fun, x)
+        x += g*fun_mu(i)
+
+        # for visualization of the result
+        S, Im_t, _ = fun_full(x)
+
+        clear_output(wait = True)
+
+        # update moving image and parameters
+        im2.set_data(Im_t)
+        txt.set_text(np.array2string(x, precision=5, floatmode='fixed'))
+
+        # update 'learning' curve
+        similarity[k] = S
+        learning_curve.set_ydata(similarity)
+
+        display(fig)
+
+        i = i+1
 
 
 def intensity_based_registration_demo():
@@ -97,112 +198,3 @@ def intensity_based_registration_demo():
         learning_curve.set_ydata(similarity)
 
         display(fig)
-
-
-def intensity_based_registration(I_path, Im_path, r_a_switch=0, corr_mi_switch=0):
-
-    # r_a_switch: 0 --> rigid (default)
-    #             1 --> affine
-    assert r_a_switch == 0 or r_a_switch == 1, "Error: input parameter r_a_switch must be either 0 or 1.. "
-
-    # corr_mi_switch: 0 --> correlation (default)
-    #                 1 --> mutual information
-    assert r_a_switch == 0 or r_a_switch == 1, "Error: input parameter r_a_switch must be either 0 or 1.. "
-
-    # read the fixed and moving images
-    # change these in order to read different images
-    I = plt.imread(I_path)
-    Im = plt.imread(Im_path)
-
-    # initial values for the parameters
-    if r_a_switch == 0:
-        x = np.array([0., 0., 0.]) # rotation,transx,transy
-    elif r_a_switch == 1:
-        x = np.array([0., 1., 1.,0.,0.,0.,0.]) # rotation,scalex,scaley,shearx,sheary,transx,transy
-    else:
-        print("ERROR.. r_a_switch must be either 0 or 1")
-
-    # the similarity function
-    # this line of code in essence creates a version of rigid_corr()
-    # in which the first two input parameters (fixed and moving image)
-    # are fixed and the only remaining parameter is the vector x with the
-    # parameters of the transformation
-
-    if r_a_switch == 0:
-        assert corr_mi_switch == 0, "Error, only correlation similarity possible with rigid registration"
-        sim_fun = reg.rigid_corr
-    elif r_a_switch == 1:
-        if corr_mi_switch == 0:
-            sim_fun = reg.affine_corr
-        else:
-            sim_fun = reg.affine_mi
-    else:
-        print("ERROR.. r_a_switch must be either 0 or 1")
-
-    fun = lambda x: (sim_fun(I, Im, x))[0]
-    fun_full = lambda x: sim_fun(I, Im, x)
-
-    if corr_mi_switch == 0:
-        # the initial learning rate
-        mu = 0.005
-        # number of iterations
-        num_iter = 50
-    else:
-        # the initial learning rate
-        mu = 0.003
-        # number of iterations
-        num_iter = 30
-
-    #Which results in the following formula for mu:
-    fun_mu = lambda i: mu*np.exp(-5*i/num_iter)         # Which results in an initial mu at iteration 1 and a mu/200 at final iteration
-
-    iterations = np.arange(1, num_iter+1)
-    similarity = np.full((num_iter, 1), np.nan)
-
-    fig = plt.figure(figsize=(14,6))
-
-    # fixed and moving image, and parameters
-    ax1 = fig.add_subplot(121)
-
-    # fixed image
-    im1 = ax1.imshow(I)
-    # moving image
-    im2 = ax1.imshow(I, alpha=0.7)
-    # parameters
-    txt = ax1.text(0.3, 0.95,
-        np.array2string(x, precision=5, floatmode='fixed'),
-        bbox={'facecolor': 'white', 'alpha': 1, 'pad': 10},
-        transform=ax1.transAxes)
-
-    # 'learning' curve
-    ax2 = fig.add_subplot(122, xlim=(0, num_iter), ylim=(0, 1.1))
-
-    learning_curve, = ax2.plot(iterations, similarity, lw=2)
-    ax2.set_xlabel('Iteration')
-    ax2.set_ylabel('Similarity')
-    ax2.grid()
-
-    # perform 'num_iter' gradient ascent updates
-    i = 0
-    for k in np.arange(num_iter):
-
-        # gradient ascent
-        g = reg.ngradient(fun, x)
-        x += g*fun_mu(i)
-
-        # for visualization of the result
-        S, Im_t, _ = fun_full(x)
-
-        clear_output(wait = True)
-
-        # update moving image and parameters
-        im2.set_data(Im_t)
-        txt.set_text(np.array2string(x, precision=5, floatmode='fixed'))
-
-        # update 'learning' curve
-        similarity[k] = S
-        learning_curve.set_ydata(similarity)
-
-        display(fig)
-
-        i = i+1
