@@ -431,12 +431,12 @@ def affine_mi(I, Im, x):
     p = joint_histogram(I,Im_t,NUM_BINS)
 
     # Now use the joint histogram to compute mutual information
-    MI_1 = mutual_information_e(p)
+    #MI_1 = mutual_information_e(p)
     MI_2 = mutual_information(p)
 
-    assert abs(MI_1-MI_2) < 0.001, "Something went wrong with the computation of mutual information..."
+    #assert abs(MI_1-MI_2) < 0.001, "Something went wrong with the computation of mutual information..."
 
-    MI = MI_1
+    MI = MI_2
 
     return MI, Im_t, Th
 
