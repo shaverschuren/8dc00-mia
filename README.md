@@ -33,16 +33,13 @@ Before you start, it is **highly recommended** to read the [general exercise gui
 
 ## Computer-aided diagnosis
 
-*TBA*
-<!---
 * [Introduction](notebooks/cad_introduction.ipynb)
 
 * Exercises
-  ** Exercise 1: [Linear regression](notebooks/cad_exercise_1.ipynb)
-  ** Exercise 2: [Logistic regression](notebooks/cad_exercise_2.ipynb)
+  * Exercise 1: [Linear regression](notebooks/cad_exercise_1.ipynb)
+  * Exercise 2: [Logistic regression](notebooks/cad_exercise_2.ipynb)
 
 * [Project work](notebooks/cad_project.ipynb)
--->
 
 # Assessment
 
