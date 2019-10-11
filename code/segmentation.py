@@ -53,17 +53,14 @@ def extract_coordinate_feature(im):
     # Find image center
     x_center = np.floor(n_rows/2);
     y_center = np.floor(n_cols/2);
-    
+
     # Generate coordinate images
     ar = np.arange(n_cols).reshape(1,-1)
     x_coord = np.tile(ar, (n_rows, 1))
     ar = ar.T
     y_coord = np.tile(ar, (1, n_cols))
-    
-    #------------------------------------------------------------------#
-    # TODO: Use the above variables to create an image coord_im
-    # that combines the information from x_coord and y_coord 
-    #------------------------------------------------------------------#
+
+    coord_im = np.sqrt(np.power(x_coord-x_center*np.ones(240), 2) + np.power(y_coord-y_center*np.ones(240), 2))
     
     # Create a feature from the coordinate image
     c = coord_im.flatten().T

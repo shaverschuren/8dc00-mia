@@ -85,9 +85,13 @@ def feature_stats_test():
     I = plt.imread('../data/dataset_brains/1_1_t1.tif')
     c, coord_im = seg.extract_coordinate_feature(I)
     X_data = np.concatenate((X, c), axis=1)
-    #------------------------------------------------------------------#
-    # TODO: Write code to examine the mean and standard deviation of your dataset containing variety of features
-    #------------------------------------------------------------------#
+
+    print("=========== Feature Stats Test ===========\n")
+    for i in range(np.size(X_data[0,:])):
+        mean = np.mean(X_data[:, i])
+        std = np.std(X_data[:, i])
+        print("Feature ", i+1, "\nMean: \t", round(mean, 3), "\nStd: \t", round(std, 3), "\n")
+    print("=================== END ==================")
 
 
 def normalized_stats_test():
@@ -95,26 +99,35 @@ def normalized_stats_test():
     I = plt.imread('../data/dataset_brains/1_1_t1.tif')
     c, coord_im = seg.extract_coordinate_feature(I)
     X_data = np.concatenate((X, c), axis=1)
-    #------------------------------------------------------------------#
-    # TODO: Write code to normalize your dataset containing variety of features,
-    #  then examine the mean and std dev
-    #------------------------------------------------------------------#
+
+    norm_data = seg.normalize_data(X_data)[0]
+
+    print("=========== Feature Stats Test ===========\n")
+    for i in range(np.size(norm_data[0, :])):
+        mean = np.mean(norm_data[:, i])
+        std = np.std(norm_data[:, i])
+        print("Feature ", i + 1, "\nMean: \t", round(mean, 3), "\nStd: \t", round(std, 3), "\n")
+    print("=================== END ==================")
 
 
 def distance_test():
-    #------------------------------------------------------------------#
-    # TODO: Generate a Gaussian dataset, with 100 samples per class, and compute the distances.
-    #  Use plt.imshow() to visualize the distance matrix as an image.
-    #------------------------------------------------------------------#
-    pass
+
+    X, Y = seg.generate_gaussian_data(100)  # Generates 100 samples per Gaussian class
+    D = scipy.spatial.distance.cdist(X, X, metric='euclidean') # Calculate distances from every point in X1 to X2
+
+    plt.imshow(D)
+
 
 def small_samples_distance_test():
-    #------------------------------------------------------------------#
-    # TODO: Generate a small sample Gaussian dataset X,
-    #  create dataset C as per the instructions,
-    #  and calculate and plot the distances between the datasets.
-    #------------------------------------------------------------------#
-    pass
+
+    X, Y = seg.generate_gaussian_data(100)  # Generates 100 samples per Gaussian class
+    C = np.array([[0, 0], [1, 1]])
+    D = scipy.spatial.distance.cdist(C, X, metric='euclidean')
+
+    plt.imshow(D)
+
+    return X, Y, C, D
+
 
 def minimum_distance_test(X, Y, C, D):
     #------------------------------------------------------------------#
@@ -123,7 +136,20 @@ def minimum_distance_test(X, Y, C, D):
     #  order the distances (min to max) using the provided code,
     #  calculate how many samples are closest to each of the samples in `C`
     #------------------------------------------------------------------#
-    pass
+
+    # Plot provided datasets
+    ax = util.scatter_data(X, Y)
+    ax.plot(C, 'oy')
+    ax.legend()
+
+    # Calculate distances between datasets
+    min_index = np.argmin(D, axis=1)
+    min_dist = D[:, min_index]
+
+    print("Min_index: \t", min_index)
+    print("min_dist: \t", min_dist)
+
+    ax.plot(*np.transpose(X[min_index]),'kx', markersize=14)
 
 
 def distance_classification_test():

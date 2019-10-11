@@ -6,6 +6,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 
+
 def ngradient(fun, x, h=1e-3):
     # Computes the derivative of a function with numerical differentiation.
     # Input:
@@ -31,8 +32,9 @@ def ngradient(fun, x, h=1e-3):
 
     return g
 
+
 def scatter_data(X, Y, feature0=0, feature1=1, ax=None):
-    # scater_data displays a scatterplot of at most 1000 samples from dataset X, and gives each point
+    # scatter_data displays a scatter-plot of at most 1000 samples from dataset X, and gives each point
     # a different color based on its label in Y
 
     k = 1000
