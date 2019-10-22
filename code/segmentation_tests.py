@@ -37,7 +37,16 @@ def scatter_data_test(showFigs=True):
         util.scatter_data(X_data,Y,0,1)
 
     #------------------------------------------------------------------#
-    # TODO: Implement a few test cases of with different features
+    # Implement a few test cases of with different features
+    I_blurred = ndimage.gaussian_filter(I, sigma=10)
+    X3 = I_blurred.flatten().T
+    X3 = X3.reshape(-1, 1)
+    I_blurred = ndimage.gaussian_filter(I, sigma=20)
+    X4 = I_blurred.flatten().T
+    X4 = X4.reshape(-1, 1)
+    X_data = np.concatenate((X1, X2, X3, X4), axis=1)
+    if showFigs:
+        util.scatter_data(X_data, Y, 0, 1)
     #------------------------------------------------------------------#
     return X_data, Y
 
@@ -65,7 +74,16 @@ def scatter_t2_test(showFigs=True):
         util.scatter_data(X_data,Y,0,1)
 
     #------------------------------------------------------------------#
-    # TODO: Extract features from the T2 image and compare them to the T1 features
+    # Extract features from the T2 image and compare them to the T1 features
+    I_blurred = ndimage.gaussian_filter(I1, sigma=10)
+    X3 = I_blurred.flatten().T
+    X3 = X3.reshape(-1, 1)
+    I_blurred = ndimage.gaussian_filter(I1, sigma=20)
+    X4 = I_blurred.flatten().T
+    X4 = X4.reshape(-1, 1)
+    X_data = np.concatenate((X1, X2, X3, X4), axis=1)
+    if showFigs:
+        util.scatter_data(X_data, Y, 0, 1)
     #------------------------------------------------------------------#
     return X_data, Y
 
@@ -111,70 +129,89 @@ def normalized_stats_test():
 
 
 def distance_test():
+    #------------------------------------------------------------------#
+    # Generate a Gaussian dataset, with 100 samples per class, and compute the distances.
+    #  Use plt.imshow() to visualize the distance matrix as an image.
 
-    X, Y = seg.generate_gaussian_data(100)  # Generates 100 samples per Gaussian class
-    D = scipy.spatial.distance.cdist(X, X, metric='euclidean') # Calculate distances from every point in X1 to X2
-
+    X, Y = seg.generate_gaussian_data(100)
+    X = np.round(X * 3)  # Stretch and round the numbers
+    D = scipy.spatial.distance.cdist(X, X, metric='euclidean')
     plt.imshow(D)
 
+    #------------------------------------------------------------------#
+    pass
 
 def small_samples_distance_test():
+    #------------------------------------------------------------------#
+    # Generate a small sample Gaussian dataset X,
+    #  create dataset C as per the instructions,
+    #  and calculate and plot the distances between the datasets.
 
-    X, Y = seg.generate_gaussian_data(100)  # Generates 100 samples per Gaussian class
     C = np.array([[0, 0], [1, 1]])
-    D = scipy.spatial.distance.cdist(C, X, metric='euclidean')
-
+    X, Y = seg.generate_gaussian_data(2)  # Generates 2 samples per Gaussian class
+    X = np.round(X * 3)  # Stretch and round the numbers
+    D = scipy.spatial.distance.cdist(X, C, metric='euclidean')
     plt.imshow(D)
-
-    return X, Y, C, D
-
+    #------------------------------------------------------------------#
+    return X,Y,C,D
 
 def minimum_distance_test(X, Y, C, D):
     #------------------------------------------------------------------#
-    # TODO: plot the datasets on top of each other in different colors and visualize the data,
+    #  plot the datasets on top of each other in different colors and visualize the data,
     #  calculate the distances between the datasets,
     #  order the distances (min to max) using the provided code,
     #  calculate how many samples are closest to each of the samples in `C`
-    #------------------------------------------------------------------#
 
-    # Plot provided datasets
-    ax = util.scatter_data(X, Y)
-    ax.plot(C, 'oy')
-    ax.legend()
-
-    # Calculate distances between datasets
+    util.scatter_data(X, Y, 0, 1)
+    plt.scatter(C[:,0],C[:,1])
     min_index = np.argmin(D, axis=1)
     min_dist = D[:, min_index]
+    print('D',D)
+    print('min_index', min_index)
+    print('min_dist', min_dist)
+    print('mindist', min_dist.diagonal())
+    print(C[:,0], (min_index == 0).sum())
+    print(C[:,1], (min_index == 1).sum())
 
-    print("Min_index: \t", min_index)
-    print("min_dist: \t", min_dist)
-
-    ax.plot(*np.transpose(X[min_index]),'kx', markersize=14)
+    #------------------------------------------------------------------#
 
 
 def distance_classification_test():
     #------------------------------------------------------------------#
-    # TODO: Use the provided code to generate training and testing data
+    # Use the provided code to generate training and testing data
     #  Classify the points in test_data, based on their distances d to the points in train_data
+    train_data, train_labels = seg.generate_gaussian_data(2);
+    test_data, test_labels = seg.generate_gaussian_data(1);
+    # train_data=np.array([[1,1],[0,0],[0,1],[1,0]]);
+    # train_labels=np.array([[0],[1],[0],[1]])
+    util.scatter_data(train_data, train_labels, 0, 1)
+    util.scatter_data(test_data, test_labels, 0, 1)
+
+    D = scipy.spatial.distance.cdist(test_data, train_data, metric='euclidean')
+    min_index = np.argmin(D, axis=1)
+    newlabels=train_labels[min_index]
+
+    print(test_data)
+    print(newlabels)
+    util.scatter_data(test_data,newlabels,0,1)
     #------------------------------------------------------------------#
-    pass
+
 
 def funX(X):
     return lambda w: seg.cost_kmeans(X,w)
 
 
 def kmeans_demo():
-
     ## Define some data and parameters
     n = 100
     X1 = np.random.randn(n, 2)
-    X2 = np.random.randn(n, 2)+5
+    X2 = np.random.randn(n, 2) + 5
     X = np.concatenate((X1, X2), axis=0)
-    Y = np.concatenate((np.zeros((n,1)), np.ones((n,1))), axis=0)
-#     ax1 = util.scatter_data(X,Y,0,1)
+    Y = np.concatenate((np.zeros((n, 1)), np.ones((n, 1))), axis=0)
+    #     ax1 = util.scatter_data(X,Y,0,1)
     N, M = X.shape
-
-    #Define number of clusters we want
+    print(X.shape)
+    # Define number of clusters we want
     clusters = 2;
 
     # the learning rate
@@ -188,46 +225,46 @@ def kmeans_demo():
     fun = funX(X)
 
     ## Algorithm
-    #Initialize cluster centers
+    # Initialize cluster centers
     idx = np.random.randint(N, size=clusters)
-    initial_w = X[idx,:]
+    print(idx)
+    initial_w = X[idx, :]
     w_draw = initial_w
-    print(w_draw)
 
-    #Reshape into vector (needed by ngradient)
-    w_vector = initial_w.reshape(clusters*M, 1)
+    # Reshape into vector (needed by ngradient)
+    w_vector = initial_w.reshape(clusters * M, 1)
+    print(w_vector)
 
-    #Vector to store cost
+    # Vector to store cost
     xx = np.linspace(1, num_iter, num_iter)
     kmeans_cost = np.empty(*xx.shape)
     kmeans_cost[:] = np.nan
 
-    fig = plt.figure(figsize=(14,6))
-    ax1  = fig.add_subplot(121)
-    im1  = ax1.scatter(X[:n,0], X[:n,1], label='X-class0')
-    im2  = ax1.scatter(X[n:,0], X[n:,1], label='X-class1')
-    line1, = ax1.plot(w_draw[:,0], w_draw[:,1], "or", markersize=5, label='W-vector')
+    fig = plt.figure(figsize=(14, 6))
+    ax1 = fig.add_subplot(121)
+    im1 = ax1.scatter(X[:n, 0], X[:n, 1], label='X-class0')
+    im2 = ax1.scatter(X[n:, 0], X[n:, 1], label='X-class1')
+    line1, = ax1.plot(w_draw[:, 0], w_draw[:, 1], "or", markersize=5, label='W-vector')
     # im3  = ax1.scatter(w_draw[:,0], w_draw[:,1])
     ax1.grid()
 
-    ax2  = fig.add_subplot(122, xlim=(0, num_iter), ylim=(0, 10))
+    ax2 = fig.add_subplot(122, xlim=(0, num_iter), ylim=(0, 10))
 
     text_str = 'k={}, g={:.2f}\ncost={:.2f}'.format(0, 0, 0)
 
     txt2 = ax2.text(0.3, 0.95, text_str, bbox={'facecolor': 'green', 'alpha': 0.4, 'pad': 10},
-             transform=ax2.transAxes)
+                    transform=ax2.transAxes)
 
-#     xx = xx.reshape(1,-1)
+    #     xx = xx.reshape(1,-1)
     line2, = ax2.plot(xx, kmeans_cost, lw=2)
     ax2.set_xlabel('Iteration')
     ax2.set_ylabel('Cost')
     ax2.grid()
 
     for k in np.arange(num_iter):
-
         # gradient ascent
-        g = util.ngradient(fun,w_vector)
-        w_vector = w_vector - mu*g
+        g = util.ngradient(fun, w_vector)
+        w_vector = w_vector - mu * g
         # calculate cost for plotting
         kmeans_cost[k] = fun(w_vector)
         text_str = 'k={}, cost={:.2f}'.format(k, kmeans_cost[k])
@@ -235,9 +272,9 @@ def kmeans_demo():
         # plot
         line2.set_ydata(kmeans_cost)
         w_draw_new = w_vector.reshape(clusters, M)
-        line1.set_data(w_draw_new[:,0], w_draw_new[:,1])
+        line1.set_data(w_draw_new[:, 0], w_draw_new[:, 1])
         display(fig)
-        clear_output(wait = True)
+        clear_output(wait=True)
         plt.pause(.005)
 
     return kmeans_cost
@@ -246,8 +283,24 @@ def kmeans_demo():
 def kmeans_clustering_test():
     #------------------------------------------------------------------#
     #TODO: Store errors for training data
+    X_data, Y, feature_labels_train = util.create_dataset(1,1,'brain')
+    predicted_labels=seg.kmeans_clustering(X_data, K=2)
+
+    I = plt.imread('../data/dataset_brains/1_1_t1.tif')
+    GT = plt.imread('../data/dataset_brains/1_1_gt.tif')
+    gt_mask = GT > 0
+    gt_labels = gt_mask.flatten()  # labels
+    predicted_mask = predicted_labels.reshape(I.shape)
+
+    fig = plt.figure(figsize=(15, 5))
+    ax1 = fig.add_subplot(131)
+    ax1.imshow(I)
+    ax2 = fig.add_subplot(132)
+    ax2.imshow(predicted_mask)
+    ax3 = fig.add_subplot(133)
+    ax3.imshow(gt_mask)
+    util.scatter_data(X_data, predicted_labels, 0, 1)
     #------------------------------------------------------------------#
-    pass
 
 def nn_classifier_test_samples():
 
@@ -276,16 +329,20 @@ def generate_train_test(N, task):
 
     if task == 'easy':
         #-------------------------------------------------------------------#
-        #TODO: modify these values to create an easy train/test dataset pair
+        #modify these values to create an easy train/test dataset pair
+        mu1=[0,0]; mu2=[2,0]; sigma1=[[1,0],[0,1]]; sigma2=[[1,0], [0,1]]
         #-------------------------------------------------------------------#
-        pass
 
 
     if task == 'hard':
         #-------------------------------------------------------------------#
-        #TODO: modify these values to create an difficult train/test dataset pair
+        #modify these values to create an difficult train/test dataset pair
+        mu1 = [0, 0];
+        mu2 = [1, 0];
+        sigma1 = [[2, 0], [0, 2]];
+        sigma2 = [[2, 0],[0, 2]]
         #-------------------------------------------------------------------#
-        pass
+
 
     trainX, trainY = seg.generate_gaussian_data(N, mu1, mu2, sigma1, sigma2)
     testX, testY = seg.generate_gaussian_data(N, mu1, mu2, sigma1, sigma2)
@@ -295,10 +352,32 @@ def generate_train_test(N, task):
 
 def easy_hard_data_classifier_test():
     #-------------------------------------------------------------------#
-    #TODO: generate and classify (using nn_classifier) 2 pairs of datasets (easy and hard)
+    # generate and classify (using nn_classifier) 2 pairs of datasets (easy and hard)
     # calculate classification error in each case
+    trainX, trainY, testX, testY=generate_train_test(2,task='easy')
+    util.scatter_data(trainX,trainY)
+
+    D = scipy.spatial.distance.cdist(testX, trainX, metric='euclidean')
+    min_index = np.argmin(D, axis=1)
+    predicted_labels = trainY[min_index]
+    err = util.classification_error(testY, predicted_labels)
+
+    print('True labels:\n{}'.format(testY))
+    print('Predicted labels:\n{}'.format(predicted_labels))
+    print('Error:\n{}'.format(err))
+
+    trainX, trainY, testX, testY = generate_train_test(2, task='hard')
+    util.scatter_data(trainX, trainY)
+
+    D = scipy.spatial.distance.cdist(testX, trainX, metric='euclidean')
+    min_index = np.argmin(D, axis=1)
+    predicted_labels = trainY[min_index]
+    err = util.classification_error(testY, predicted_labels)
+
+    print('True labels:\n{}'.format(testY))
+    print('Predicted labels:\n{}'.format(predicted_labels))
+    print('Error:\n{}'.format(err))
     #-------------------------------------------------------------------#
-    pass
 
 def nn_classifier_test_brains(testDice=False):
 
@@ -394,6 +473,10 @@ def learning_curve():
     # Load training and test data
     train_data, train_labels = seg.generate_gaussian_data(1000)
     test_data, test_labels = seg.generate_gaussian_data(1000)
+
+    # train_data, train_labels, train_feature_labels = util.create_dataset(1, 1, 'brain')
+    # test_data, test_labels, test_feature_labels = util.create_dataset(2, 1, 'brain')
+
     [train_data, test_data] = seg.normalize_data(train_data, test_data)
 
     #Define parameters
@@ -408,7 +491,11 @@ def learning_curve():
     test_dice[:] = np.nan
 
     #------------------------------------------------------------------#
-    #TODO: Store errors for training data
+    # Store errors for training data
+    train_error = np.empty([len(train_sizes), num_iter])
+    train_error[:] = np.nan
+    train_dice = np.empty([len(train_sizes), num_iter])
+    train_dice[:] = np.nan
     #------------------------------------------------------------------#
 
     ## Train and test with different values
@@ -433,7 +520,11 @@ def learning_curve():
             test_dice[i,j] = util.dice_overlap(test_labels, predicted_test_labels)
 
             #------------------------------------------------------------------#
-            #TODO: Predict training labels and evaluate
+            #Predict training labels and evaluate
+            predicted_train_labels = neigh.predict(train_data)
+
+            train_error[i, j] = util.classification_error(train_labels, predicted_train_labels)
+            train_dice[i, j] = util.dice_overlap(train_labels, predicted_train_labels)
             #------------------------------------------------------------------#
 
     ## Display results
@@ -445,7 +536,11 @@ def learning_curve():
     p1 = ax1.errorbar(x, y_test, yerr=yerr_test, label='Test error')
 
     #------------------------------------------------------------------#
-    #TODO: Plot training size
+    # Plot training size
+    x = np.log(train_sizes)
+    y_train = np.mean(train_error, 1)
+    yerr_train = np.std(train_error, 1)
+    p1 = ax1.errorbar(x, y_train, yerr=yerr_train, label='Train error')
     #------------------------------------------------------------------#
 
     ax1.set_xlabel('Number of training samples (k)')
@@ -467,8 +562,9 @@ def feature_curve(use_random=False):
     if use_random:
         #------------------------------------------------------------------#
         #TODO: Replace features by random numbers, of the same size as the data
+        train_data=np.random.randn(train_data.shape[0],train_data.shape[1])
+        test_data=np.random.randn(test_data.shape[0],test_data.shape[1])
         #------------------------------------------------------------------#
-        pass
 
     # Normalize data
     train_data, test_data = seg.normalize_data(train_data, test_data)
@@ -566,15 +662,17 @@ def high_dimensions_output(X, ax, n_bins=20):
 
     #Plot histogram
     ax.hist(D.flatten(), bins=n_bins)
-
     #------------------------------------------------------------------#
     # TODO: Mean, maximum distance, and average nearest neighbor distance
+    mn=np.mean(D)
+    mx=np.amax(D)
+    np.fill_diagonal(D,mx)
+    mns= np.mean(np.amin(D,axis=1))
     #------------------------------------------------------------------#
     return mn, mx, mns
 
 
 def covariance_matrix_test():
-
     N=100
     mu1=[0,0]
     mu2=[0,0]
@@ -582,24 +680,38 @@ def covariance_matrix_test():
     sigma2=[[3,1],[1,1]]
     X, Y = seg.generate_gaussian_data(N, mu1, mu2, sigma1, sigma2)
     #------------------------------------------------------------------#
-    # TODO: Calculate the mean and covariance matrix of the data,
+    #  Calculate the mean and covariance matrix of the data,
     #  and compare them to the parameters you used as input.
+    mn=np.mean(X)
+    print(mn)
+    co=np.cov(X,rowvar=False)
+    print(co)
+    print(co.shape)
+    return X,Y,co
     #------------------------------------------------------------------#
 
 
 def eigen_vecval_test(sigma):
     #------------------------------------------------------------------#
-    # TODO: Compute the eigenvectors and eigenvalues of the covariance matrix,
+    #  Compute the eigenvectors and eigenvalues of the covariance matrix,
     #  what two properties can you name about the eigenvectors? How can you verify these properties?
     #  which eigenvalue is the largest and which is the smallest?
+    print(sigma)
+    w, v = np.linalg.eig(sigma)
+    ix = np.argsort(w)[::-1]  # Find ordering of eigenvalues
+    w = w[ix]  # Reorder eigenvalues
+    v = v[:, ix]  # Reorder eigenvectors
+    print(w,v)
+    return w,v
     #------------------------------------------------------------------#
-    pass
+
 
 def rotate_using_eigenvectors_test(X, Y, v):
     #------------------------------------------------------------------#
-    # TODO: Rotate X using the eigenvectors
+    #  Rotate X using the eigenvectors
+    X_rot = X.dot(v)
     #------------------------------------------------------------------#
-    pass
+    return X_rot
 
 def test_mypca():
 
@@ -670,6 +782,20 @@ def segmentation_combined_atlas_test():
     #  Convert true label into mask image, and
     #  View both masks on the same axis,
     #  Also calculate dice coefficient and error
+    prlabes=seg.segmentation_combined_atlas(all_labels_matrix)
+    predicted_mask= prlabes.reshape(240,240)
+    GT = plt.imread('../data/dataset_brains/1_1_gt.tif')
+    gt_mask = GT > 0
+    gt_vec = gt_mask.flatten()  # labels
+
+    MSE= util.classification_error(gt_vec,prlabes)
+    Dice=util.dice_overlap(gt_vec,prlabes)
+    print('MSE',MSE,'Dice',Dice)
+    plt.figure()
+    plt.imshow(predicted_mask, cmap='gray', alpha=0.5)
+    plt.imshow(gt_mask, cmap='jet', alpha=0.5)
+    plt.show()
+
     #------------------------------------------------------------------#
 
 

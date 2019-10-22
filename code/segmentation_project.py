@@ -7,12 +7,19 @@ Project code+scripts for 8DC00 course
 # Imports
 
 import numpy as np
-import utilities as util
+import segmentation_util as util
 import matplotlib.pyplot as plt
 import segmentation as seg
+from scipy import ndimage, stats
+
+def create_my_feature(I):
+
+    edge=ndimage.median_filter(I,(9))
+
+    return edge
 
 
-def segmentation_mymethod(train_data_matrix, train_labels_matrix, test_data, task='brain'):
+def segmentation_mymethod(train_data_matrix, train_labels_matrix, test_data, task='tissue'):
     # segments the image based on your own method!
     # Input:
     # train_data_matrix   num_pixels x num_features x num_subjects matrix of
@@ -25,6 +32,32 @@ def segmentation_mymethod(train_data_matrix, train_labels_matrix, test_data, tas
 
     #------------------------------------------------------------------#
     #TODO: Implement your method here
+
+    choice_br=[0,1,5,6,7]
+    train_data= train_data_matrix[:,:,1]
+    train_labels=train_labels_matrix[:,1]
+    ix = np.random.randint(len(train_data), size=1000)
+
+    train_datann = train_data[:,choice_br]
+    train_datann = train_datann[ix,:]
+
+    train_labels_brain = train_labels>0
+    train_labelsnn = train_labels_brain[ix]
+
+    test_datann = test_data[:,choice_br]
+
+    predicted_labelsnn = seg.knn_classifier(train_datann, train_labelsnn, test_datann, 35)
+    predicted_masknn = predicted_labelsnn.reshape(I.shape)
+    openimage = scipy.ndimage.morphology.binary_opening(predicted_masknn, iterations=2)
+    op_imf = openimage.flatten().T.astype(float)
+    op_imf = op_imf.reshape(-1, 1)
+
+    train_data_brain = train_data*op_imf
+    train_labels_brain = train_data*op_imf
+
+
+
+
     #------------------------------------------------------------------#
     return predicted_labels
 
@@ -35,7 +68,7 @@ def segmentation_demo():
     test_subject = 2
     train_slice = 1
     test_slice = 1
-    task = 'brain'
+    task = 'tissue'
 
     #Load data
     train_data, train_labels, train_feature_labels = util.create_dataset(train_subject,train_slice,task)
@@ -68,7 +101,7 @@ def segmentation_demo():
 
     all_subjects = np.arange(num_images)
     train_slice = 1
-    task = 'brain'
+    task = 'tissue'
     all_data_matrix = np.empty([train_data.shape[0],train_data.shape[1],num_images])
     all_labels_matrix = np.empty([train_labels.size,num_images], dtype=bool)
 

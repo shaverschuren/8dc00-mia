@@ -7,6 +7,12 @@ Segmentation module code for 8DC00 course
 import numpy as np
 import scipy
 from sklearn.neighbors import KNeighborsClassifier
+import segmentation_util as util
+import matplotlib.pyplot as plt
+from matplotlib.patches import Patch
+import seaborn as sns
+
+
 
 
 # SECTION 1. Segmentation in feature space
@@ -53,14 +59,25 @@ def extract_coordinate_feature(im):
     # Find image center
     x_center = np.floor(n_rows/2);
     y_center = np.floor(n_cols/2);
-
+    
     # Generate coordinate images
     ar = np.arange(n_cols).reshape(1,-1)
     x_coord = np.tile(ar, (n_rows, 1))
     ar = ar.T
     y_coord = np.tile(ar, (1, n_cols))
+    
+    #------------------------------------------------------------------#
+    # Use the above variables to create an image coord_im
+    # that combines the information from x_coord and y_coord
 
-    coord_im = np.sqrt(np.power(x_coord-x_center*np.ones(240), 2) + np.power(y_coord-y_center*np.ones(240), 2))
+    d = np.zeros((n_rows,n_cols))
+
+    for i in range(n_rows):
+        for j in range(n_cols):
+            d[i,j] = np.sqrt((x_coord[i,j]-x_center)**2 + (y_coord[i,j]-y_center)**2)
+
+    coord_im = d #/np.amax(d)
+    #------------------------------------------------------------------#
     
     # Create a feature from the coordinate image
     c = coord_im.flatten().T
@@ -102,7 +119,6 @@ def normalize_data(train_data, test_data=None):
 
 def cost_kmeans(X, w_vector):
     # Computes the cost of assigning data in X to clusters in w_vector 
-    
     # Get the data dimensions
     n, m = X.shape
 
@@ -111,11 +127,16 @@ def cost_kmeans(X, w_vector):
 
     # Reshape cluster centers into dataset format
     W = w_vector.reshape(K, m)
-
     #------------------------------------------------------------------#
-    # TODO: Find distance of each point to each cluster center
+    # Find distance of each point to each cluster center
     # Then find the minimum distances min_dist and indices min_index
     # Then calculate the cost
+    D = scipy.spatial.distance.cdist(X, W, metric='euclidean')
+    min_index = np.argmin(D, axis=1)
+    min_dist = np.zeros((D.shape[0],1))
+    for i in range(len(D[:,1])):
+        min_dist[i]=D[i,min_index[i]]
+    J=sum(min_dist**2)/(n)
     #------------------------------------------------------------------#
     return J
 
@@ -135,28 +156,40 @@ def kmeans_clustering(test_data, K=2):
 
 
     # the learning rate
-    mu = 0.01
+    start_mu = 0.1
 
     # iterations
-    num_iter = 100
+    num_iter = 30
 
     #------------------------------------------------------------------#
-    # TODO: Initialize cluster centers and store them in w_initial
+    # Initialize cluster centers and store them in w_initial
+    X=test_data
+    N, M = test_data.shape
+    idx = np.random.randint(N, size=K)
+    w_initial = X[idx, :]
+
     #------------------------------------------------------------------#
 
     #Reshape centers to a vector (needed by ngradient)
     w_vector = w_initial.reshape(K*M, 1)
 
     for i in np.arange(num_iter):
+        mu=start_mu*np.exp(-5*i/num_iter)
         # gradient ascent
-        w_vector = w_vector - mu*reg.ngradient(fun,w_vector)
+        w_vector = w_vector - mu*util.ngradient(fun,w_vector)
 
     #Reshape back to dataset
     w_final = w_vector.reshape(K, M)
-
     #------------------------------------------------------------------#
-    # TODO: Find distance of each point to each cluster center
+    # Find distance of each point to each cluster center
     # Then find the minimum distances min_dist and indices min_index
+
+    D = scipy.spatial.distance.cdist(X, w_final, metric='euclidean')
+    min_index = np.argmin(D, axis=1)
+    min_dist = np.zeros((D.shape[0], 1))
+    for i in range(len(D[:, 1])):
+        min_dist[i] = D[i, min_index[i]]
+
     #------------------------------------------------------------------#
 
     # Sort by intensity of cluster center
@@ -186,7 +219,10 @@ def nn_classifier(train_data, train_labels, test_data):
     # predicted_labels   num_test x 1 predicted vector with labels for the test data
 
     #------------------------------------------------------------------#
-    # TODO: Implement missing functionality
+    # Implement missing functionality
+    D = scipy.spatial.distance.cdist(test_data, train_data, metric='euclidean')
+    min_index = np.argmin(D, axis=1)
+    predicted_labels = train_labels[min_index]
     #------------------------------------------------------------------#
 
 
@@ -232,9 +268,14 @@ def mypca(X):
     X = X - np.mean(X, axis=0)
 
     #------------------------------------------------------------------#
-    #TODO: Calculate covariance matrix of X, find eigenvalues and eigenvectors,
+    # Calculate covariance matrix of X, find eigenvalues and eigenvectors,
     # sort them, and rotate X using the eigenvectors
-
+    covn = np.cov(X,rowvar=False)
+    w, v = np.linalg.eig(covn)
+    ix = np.argsort(w)[::-1]  # Find ordering of eigenvalues
+    w = w[ix]  # Reorder eigenvalues
+    v = v[:, ix]  # Reorder eigenvectors
+    X_pca = X.dot(v)
     #------------------------------------------------------------------#
 
     #Return fraction of variance
@@ -274,6 +315,10 @@ def segmentation_combined_atlas(train_labels_matrix, combining='mode'):
     
     #------------------------------------------------------------------#
     # TODO: Add options for combining with min and max
+    elif combining=='min':
+        predicted_labels = np.amin(predicted_labels,axis=1)
+    elif combining=='max':
+        predicted_labels = np.max(predicted_labels, axis=1)
     #------------------------------------------------------------------#
     else:
         raise ValueError("No such combining type exists")
@@ -368,3 +413,35 @@ def segmentation_knn(train_data, train_labels, test_data, k=1):
     predicted_labels = neigh.predict(test_data_norm)
 
     return predicted_labels
+
+def scatter_all(DM,LM,FL):
+    # scatter 2 features and their correspoding labels
+    # DM is matrix with all train_data
+    # LM is matrix with all labels_data
+    # FL is array with all feature names
+
+    row, column, subject = DM.shape
+    subject = 5
+
+    fig, axs = plt.subplots(nrows=column, ncols=column, figsize=(column * 5, column * 5), sharex='all', sharey='all')
+
+    for i in range(column):
+        for j in range(column):
+            ax = axs[i, j]
+            ax.grid(True)
+            ax.set_xlim(-2, 2)
+            ax.set_ylim(-2, 2)
+            # ax.legend(['Background', 'White matter', 'Grey matter', 'CSF'])
+            for im in range(subject):
+                X = DM[:, :, im]
+                Y = LM[:, im]
+                # if i == j:
+                #     ax.hist(X, bins=100)
+                # else:
+                util.scatter_data(X, Y, feature0=i, feature1=j, ax=ax)
+                if i == column - 1:
+                    axs[i, j].set_xlabel(FL[j].format(j + 1), fontsize=18)
+                if j == 0:
+                    axs[i, j].set_ylabel(FL[i].format(i + 1), fontsize=18)
+
+    plt.show()

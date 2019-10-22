@@ -5,7 +5,9 @@ Utility functions for segmentation.
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
-
+import segmentation as seg
+from scipy import ndimage, stats
+import segmentation_project as pro
 
 def ngradient(fun, x, h=1e-3):
     # Computes the derivative of a function with numerical differentiation.
@@ -16,25 +18,30 @@ def ngradient(fun, x, h=1e-3):
     # Output:
     # g - vector of partial derivatives (gradient) of fun
 
-    g = np.zeros_like(x)
+    #------------------------------------------------------------------#
+    # Implement the  computation of the partial derivatives of
+    # the function at x with numerical differentiation.
+    # g[k] should store the partial derivative w.r.t. the k-th parameter
 
+    g = np.zeros_like(x);
     for k in range(x.size):
-        xh1 = x.copy()
-        xh2 = x.copy()
-        xh1[k] = xh1[k] + h / 2
+        xh1=x.copy()
+        xh2=x.copy()
+        xh1[k]=xh1[k]+h/2
         xh2[k] = xh2[k] - h / 2
         a = fun(xh1)
         b = fun(xh2)
-        if isinstance(a, tuple):
-            g[k] = (a[0] - b[0]) / h
+        if isinstance(a,tuple):
+            g[k]=(a[0]-b[0])/h
         else:
-            g[k] = (a - b) / h
+            g[k]=(a-b)/h
+
+    #------------------------------------------------------------------#
 
     return g
 
-
 def scatter_data(X, Y, feature0=0, feature1=1, ax=None):
-    # scatter_data displays a scatter-plot of at most 1000 samples from dataset X, and gives each point
+    # scater_data displays a scatterplot of at most 1000 samples from dataset X, and gives each point
     # a different color based on its label in Y
 
     k = 1000
@@ -106,8 +113,40 @@ def extract_features(image_number, slice_number):
     features += ('T2 intensity',)
 
     #------------------------------------------------------------------#
-    # TODO: Extract more features and add them to X.
+    # Extract more features and add them to X.
     # Don't forget to provide (short) descriptions for the features
+
+    I_blurred = ndimage.gaussian_filter(t1, sigma=10)
+    X2 = I_blurred.flatten().T
+    t1_blur_10 = X2.reshape(-1, 1)
+    features += ('T1 Intensity (Gaussian)',)
+
+    I_blurred_t2 = ndimage.gaussian_filter(t2, sigma=10)
+    X3 = I_blurred_t2.flatten().T
+    t2_blur_10 = X3.reshape(-1, 1)
+    features += ('T2 Intensity (Gaussian)',)
+
+
+
+    t_diff= (t1-t2)^2
+    tf_diff = t_diff.flatten().T.astype(float)
+    tf_diff = tf_diff.reshape(-1, 1)
+    features += ('T1-T2 difference',)
+
+    t1_med = pro.create_my_feature(t1)
+    t1f_med = t1_med.flatten().T
+    t1f_med = t1f_med.reshape(-1, 1)
+    features += ('T1 Intensity (Median)',)
+
+    t2_med = pro.create_my_feature(t2)
+    t2f_med = t2_med.flatten().T
+    t2f_med = t2f_med.reshape(-1, 1)
+    features += ('T2 Intensity (Median)',)
+
+    c,c_im = seg.extract_coordinate_feature(t1)
+    features += ('Distance to Center',)
+
+    X = np.concatenate((X, t1_blur_10, t2_blur_10, tf_diff, t1f_med, t2f_med, c),axis=1)
     #------------------------------------------------------------------#
     return X, features
 
@@ -142,12 +181,14 @@ def create_labels(image_number, slice_number, task):
 
     if task == 'brain':
         Y = I>0
-    elif task == 'brain':
-        white_matter = I == 2 | I == 5
-        gray_matter  = I == 7 | I == 3
-        csf         = I == 4 | I == 8
-        background  = I == 0 |  I == 1 | I == 6
-        Y = I
+    elif task == 'tissue':
+        white_matter = (I == 2) | (I == 5)
+        gray_matter  = (I == 7) | (I == 3)
+        csf         = (I == 4) | (I == 8)
+        background  = (I == 0) |  (I == 1) | (I == 6)
+
+        Y = np.copy(I)
+
         Y[background] = 0
         Y[white_matter] = 1
         Y[gray_matter] = 2
@@ -177,7 +218,21 @@ def dice_overlap(true_labels, predicted_labels, smooth=1.):
     p = predicted_labels.flatten()
 
     #------------------------------------------------------------------#
-    # TODO: Implement the missing functionality for Dice overlap
+    # Implement the missing functionality for Dice overlap
+    TP = 0
+    FP = 0
+    TN = 0
+    FN = 0
+    for i in range(len(p)):
+        if t[i] == p[i] == 1:
+            TP += 1
+        if p[i] == 1 and t[i] != p[i]:
+            FP += 1
+        if t[i] == p[i] == 0:
+            TN += 1
+        if p[i] == 0 and t[i] != p[i]:
+            FN += 1
+    dice = 2*TP/(2*TP+FP+FN)
     #------------------------------------------------------------------#
     return dice
 
@@ -234,7 +289,9 @@ def classification_error(true_labels, predicted_labels):
     p = predicted_labels.flatten()
 
     #------------------------------------------------------------------#
-    # TODO: Implement the missing functionality for classification error
+    # Implement the missing functionality for classification error
+    err_count=np.sum(t != p)
+    err=err_count/len(t)
     #------------------------------------------------------------------#
     return err
 
